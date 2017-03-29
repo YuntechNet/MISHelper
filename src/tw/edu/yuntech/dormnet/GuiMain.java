@@ -26,15 +26,15 @@ public class GuiMain extends MISHelper {
             new JButton("確認"), new JButton("取消"), new JButton("關於")
     };
 
-    public GuiMain(SystemInfo systemInfo, ArrayList<String> interfaces) {
-        this(systemInfo, interfaces.toArray(new String[interfaces.size()]));
+    public GuiMain(SystemInfo systemInfo, ArrayList<String> adapters) {
+        this(systemInfo, adapters.toArray(new String[adapters.size()]));
     }
 
-    public GuiMain(SystemInfo systemInfo, String[] interfaces) {
+    public GuiMain(SystemInfo systemInfo, String[] adapters) {
         lblSysUpdate(systemInfo);
         mainListener = new MainListener();
 
-        interfaceBox = new JComboBox<>(interfaces);
+        interfaceBox = new JComboBox<>(adapters);
 
         frame = new JFrame("MISHelper");
         frame.setSize(new Dimension(600, 200));
@@ -129,8 +129,9 @@ public class GuiMain extends MISHelper {
             String cmd = e.getActionCommand();
             if(cmd.equals(btns[0].getText())) {
                 // Confirm
-                if(!processUpdateSystemInterfaceInfo(ipBox.getText()))
+                if(!checkIpFormat(ipBox.getText()))
                     ipBox.setText("");
+                processStaticIpUpdate(AdapterInfo.getAdapterName(interfaceBox.getSelectedItem().toString()), ipBox.getText());
             } else if(cmd.equals(btns[1].getText())) {
                 // Cancel
                 ipBox.setText("");

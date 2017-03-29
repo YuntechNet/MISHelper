@@ -5,32 +5,19 @@ package tw.edu.yuntech.dormnet;
  */
 public class SystemInfo {
 
-    private String osName = "";
-
     public String getOsName() {
         return osName;
-    }
-
-    public void setOsName(String osName) {
-        this.osName = osName;
     }
 
     public String getOsVersion() {
         return osVersion;
     }
 
-    public void setOsVersion(String osVersion) {
-        this.osVersion = osVersion;
-    }
-
     public String getJavaVersion() {
         return javaVersion;
     }
 
-    public void setJavaVersion(String javaVersion) {
-        this.javaVersion = javaVersion;
-    }
-
+    private String osName = "";
     private String osVersion = "";
     private String javaVersion = "";
 
@@ -40,5 +27,8 @@ public class SystemInfo {
         javaVersion = System.getProperty("java.version");
     }
 
+    boolean isWindows() { return osName.toLowerCase().contains("win"); }
+    boolean isMac() { return osName.toLowerCase().contains("mac"); }
+    boolean isLinux() { return osName.toLowerCase().contains("nix") || osName.toLowerCase().contains("nux") || osName.toLowerCase().contains("aix"); }
 
 }
