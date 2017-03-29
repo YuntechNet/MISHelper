@@ -1,7 +1,5 @@
 package tw.edu.yuntech.dormnet;
 
-import com.sun.deploy.util.WinRegistry;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.NetworkInterface;
@@ -64,7 +62,7 @@ public class AdapterInfo {
 
     private static void windowsCapture() throws Exception {
         // Execute cmd only for windows user to capture interface's GUID
-        Process p = Runtime.getRuntime().exec("cmd.exe /C reg query \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkCards\"");
+        Process p = Runtime.getRuntime().exec("cmd.exe /C reg query \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkCards\"");
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line;
         ArrayList<String> tmp = new ArrayList<>();
@@ -75,12 +73,14 @@ public class AdapterInfo {
         p.getInputStream().close();
         // Get every adapter name also through cmd.
         for(int i = 0; i < tmp.size(); ++i) {
-            String reg = "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
-            String description = WinRegistry.getString(WinRegistry.HKEY_LOCAL_MACHINE, tmp.get(i).replace("HKEY_LOCAL_MACHINE\\", ""), "Description");
+            String reg = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
+            String description = getRegValue(tmp.get(i), "Description");
             for(int j = 0; j < name.size(); ++j) {
                 if(displayName.get(j).contains(description)) {
-                    GUID.set(j, WinRegistry.getString(WinRegistry.HKEY_LOCAL_MACHINE, tmp.get(i).replace("HKEY_LOCAL_MACHINE\\", ""), "ServiceName"));
-                    adapterName.set(j, WinRegistry.getString(WinRegistry.HKEY_LOCAL_MACHINE, reg + GUID.get(j) + "\\Connection", "Name"));
+                    GUID.set(j, getRegValue(tmp.get(i), "ServiceName"));
+                    //GUID.set(j, WinRegistry.getString(WinRegistry.HKEY_LOCAL_MACHINE, tmp.get(i).replace("HKEY_LOCAL_MACHINE\\", ""), "ServiceName"));
+                    adapterName.set(j, getRegValue(reg + GUID.get(j) + "\\Connection", "Name"));
+                    //adapterName.set(j, WinRegistry.getString(WinRegistry.HKEY_LOCAL_MACHINE, reg + GUID.get(j) + "\\Connection", "Name"));
                 }
             }
         }
@@ -93,6 +93,26 @@ public class AdapterInfo {
 
     private static void linuxCapture() throws Exception {
 
+    }
+
+    static String getRegValue(String path, String key) {
+        try {
+            Process p = Runtime.getRuntime().exec("cmd.exe /C reg query \"" + path + "\" /v \"" + key + "\"");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream(), "MS950"));
+            String line, tmp = "";
+            while((line = reader.readLine()) != null) {
+                if(!line.contains(key)) continue;
+                tmp = line;
+            }
+            p.getInputStream().close();
+            tmp = tmp.split("REG_SZ")[1];
+            while(tmp.startsWith(" "))
+                tmp = tmp.replaceFirst(" ", "");
+            return tmp;
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return "null";
     }
 
 }
