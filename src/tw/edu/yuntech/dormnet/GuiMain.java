@@ -15,20 +15,16 @@ public class GuiMain extends MISHelper {
 
     private JFrame frame;
     private JLabel[] labels = {
-            new JLabel("網卡: "), new JLabel("IP位置: ")
+            new JLabel(r.getString("interface") + ": "), new JLabel(r.getString("ip") + ": ")
     };
     private JLabel[] lblSys = {
-            new JLabel("作業系統: {OS_NAME}  "), new JLabel("系統版本: {OS_VERSION}  "), new JLabel("Java版本: {JAVA_VERSION}  ")
+            new JLabel(r.getString("os") + ": {OS_NAME}  "), new JLabel(r.getString("sysVersion") + ": {OS_VERSION}  "), new JLabel(r.getString("javaVersion") + ": {JAVA_VERSION}  ")
     };
-    private JComboBox<?> interfaceBox;
+    private JComboBox<String> interfaceBox;
     private JTextField ipBox = new JTextField(10);
     private JButton[] btns = {
-            new JButton("確認"), new JButton("取消"), new JButton("關於")
+            new JButton(r.getString("refresh")), new JButton(r.getString("confirm")), new JButton(r.getString("clear")), new JButton(r.getString("about")), new JButton(r.getString("exit"))
     };
-
-    public GuiMain(SystemInfo systemInfo, ArrayList<String> adapters) {
-        this(systemInfo, adapters.toArray(new String[adapters.size()]));
-    }
 
     public GuiMain(SystemInfo systemInfo, String[] adapters) {
         lblSysUpdate(systemInfo);
@@ -37,7 +33,8 @@ public class GuiMain extends MISHelper {
         interfaceBox = new JComboBox<>(adapters);
 
         frame = new JFrame("MISHelper");
-        frame.setSize(new Dimension(600, 200));
+        frame.setSize(new Dimension(650, 200));
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new GridBagLayout());
 
@@ -107,18 +104,27 @@ public class GuiMain extends MISHelper {
     }
 
     private void btnGenerate() {
+        btns[0].addActionListener(mainListener);
+        btns[0].setActionCommand(btns[0].getText());
+        GridBagConstraints g = new GridBagConstraints();
+        g.gridx = 3;
+        g.gridy = 1;
+        g.insets = new Insets(5, 5, 5, 5);
+        frame.add(btns[0], g);
+
         JPanel p = new JPanel();
-        for(int i = 0; i < 3; ++i) {
+        for(int i = 1; i < btns.length; ++i) {
             btns[i].addActionListener(mainListener);
             btns[i].setActionCommand(btns[i].getText());
 
             p.add(btns[i]);
         }
 
-        GridBagConstraints g = new GridBagConstraints();
-        g.gridx = 2;
-        g.gridy = 2;
-        frame.add(p, g);
+        GridBagConstraints g2 = new GridBagConstraints();
+        g2.gridx = 2;
+        g2.gridy = 2;
+        g2.gridwidth = 2;
+        frame.add(p, g2);
     }
 
 
@@ -126,19 +132,35 @@ public class GuiMain extends MISHelper {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            for(int i = 0; i < btns.length; ++i)
+                btns[i].setEnabled(false);
+
             String cmd = e.getActionCommand();
             if(cmd.equals(btns[0].getText())) {
+                // Refresh
+                AdapterInfo.captureAdapters(systemInfo);
+                interfaceBox.removeAllItems();
+                for(int i = 0; i < AdapterInfo.getDisplayNameArray().length; ++i)
+                    interfaceBox.addItem(AdapterInfo.getDisplayNameArray()[i]);
+                //btns[1].setEnabled(true);
+            } else if(cmd.equals(btns[1].getText())) {
                 // Confirm
                 if(!checkIpFormat(ipBox.getText()))
                     ipBox.setText("");
                 processStaticIpUpdate(AdapterInfo.getAdapterName(interfaceBox.getSelectedItem().toString()), ipBox.getText());
-            } else if(cmd.equals(btns[1].getText())) {
-                // Cancel
-                ipBox.setText("");
             } else if(cmd.equals(btns[2].getText())) {
+                // Clear
+                ipBox.setText("");
+            } else if(cmd.equals(btns[3].getText())) {
                 // About
-
+                new GuiAbout();
+            } else if(cmd.equals(btns[4].getText())) {
+                // Exit
+                System.exit(0);
             }
+
+            for(int i = 0; i < btns.length; ++i)
+                btns[i].setEnabled(true);
         }
     }
 

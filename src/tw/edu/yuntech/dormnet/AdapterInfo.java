@@ -16,9 +16,13 @@ public class AdapterInfo {
         return displayName;
     }
 
+    public static String[] getDisplayNameArray() {
+        return displayName.toArray(new String[displayName.size()]);
+    }
+
     public static String getAdapterName(String disName) {
-        for(int i = 0; i < name.size(); ++i) {
-            if(disName.contains(displayName.get(i))) {
+        for (int i = 0; i < name.size(); ++i) {
+            if (disName.contains(displayName.get(i))) {
                 return adapterName.get(i);
             }
         }
@@ -31,12 +35,16 @@ public class AdapterInfo {
     private static ArrayList<String> adapterName = new ArrayList<>();
 
     static void captureAdapters(SystemInfo systemInfo) {
+        name.clear();
+        displayName.clear();
+        GUID.clear();
+        adapterName.clear();
         try {
             // Capture All Active Interface.
             Enumeration interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
                 NetworkInterface face = (NetworkInterface) interfaces.nextElement();
-                // Exclude down card, loopback, can't multicast, and VM interface.
+                // Exclude down card, loopback, can't multi-cast, and VM interface.
                 if (face.isUp() && !face.isLoopback() && face.supportsMulticast() && !face.getDisplayName().contains("VM")) {
                     name.add(face.getName());
                     displayName.add(face.getDisplayName());
@@ -45,14 +53,14 @@ public class AdapterInfo {
                 }
             }
 
-            if(systemInfo.isWindows())
+            if (systemInfo.isWindows())
                 windowsCapture();
-            else if(systemInfo.isMac())
+            else if (systemInfo.isMac())
                 macCapture();
-            else if(systemInfo.isLinux())
+            else if (systemInfo.isLinux())
                 linuxCapture();
 
-            for(int i = 0; i < name.size(); ++i) {
+            for (int i = 0; i < name.size(); ++i) {
                 System.out.println(name.get(i) + " + " + displayName.get(i) + " + " + GUID.get(i) + " + " + adapterName.get(i));
             }
         } catch (Exception e) {
@@ -66,21 +74,19 @@ public class AdapterInfo {
         BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line;
         ArrayList<String> tmp = new ArrayList<>();
-        while((line = reader.readLine()) != null) {
-            if(line.equals("")) continue;
+        while ((line = reader.readLine()) != null) {
+            if (line.equals("")) continue;
             tmp.add(line);
         }
         p.getInputStream().close();
         // Get every adapter name also through cmd.
-        for(int i = 0; i < tmp.size(); ++i) {
+        for (int i = 0; i < tmp.size(); ++i) {
             String reg = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
             String description = getRegValue(tmp.get(i), "Description");
-            for(int j = 0; j < name.size(); ++j) {
-                if(displayName.get(j).contains(description)) {
+            for (int j = 0; j < name.size(); ++j) {
+                if (displayName.get(j).contains(description)) {
                     GUID.set(j, getRegValue(tmp.get(i), "ServiceName"));
-                    //GUID.set(j, WinRegistry.getString(WinRegistry.HKEY_LOCAL_MACHINE, tmp.get(i).replace("HKEY_LOCAL_MACHINE\\", ""), "ServiceName"));
                     adapterName.set(j, getRegValue(reg + GUID.get(j) + "\\Connection", "Name"));
-                    //adapterName.set(j, WinRegistry.getString(WinRegistry.HKEY_LOCAL_MACHINE, reg + GUID.get(j) + "\\Connection", "Name"));
                 }
             }
         }
@@ -95,24 +101,20 @@ public class AdapterInfo {
 
     }
 
-    static String getRegValue(String path, String key) {
-        try {
-            Process p = Runtime.getRuntime().exec("cmd.exe /C reg query \"" + path + "\" /v \"" + key + "\"");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream(), "MS950"));
-            String line, tmp = "";
-            while((line = reader.readLine()) != null) {
-                if(!line.contains(key)) continue;
-                tmp = line;
-            }
-            p.getInputStream().close();
-            tmp = tmp.split("REG_SZ")[1];
-            while(tmp.startsWith(" "))
-                tmp = tmp.replaceFirst(" ", "");
-            return tmp;
-        } catch(Exception e) {
-            e.printStackTrace();
+    // Windows Only.
+    static String getRegValue(String path, String key) throws Exception {
+        Process p = Runtime.getRuntime().exec("cmd.exe /C reg query \"" + path + "\" /v \"" + key + "\"");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream(), "MS950"));
+        String line, tmp = "";
+        while ((line = reader.readLine()) != null) {
+            if (!line.contains(key)) continue;
+            tmp = line;
         }
-        return "null";
+        p.getInputStream().close();
+        tmp = tmp.split("REG_SZ")[1];
+        while (tmp.startsWith(" "))
+            tmp = tmp.replaceFirst(" ", "");
+        return tmp;
     }
 
 }
