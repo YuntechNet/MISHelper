@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 /**
  * Created by Clode on 2017/3/28.
@@ -15,15 +14,15 @@ public class GuiMain extends MISHelper {
 
     private JFrame frame;
     private JLabel[] labels = {
-            new JLabel(r.getString("interface") + ": "), new JLabel(r.getString("ip") + ": ")
+            new JLabel(r.getString("lblInterface") + ": "), new JLabel(r.getString("lblIP") + ": ")
     };
     private JLabel[] lblSys = {
-            new JLabel(r.getString("os") + ": {OS_NAME}  "), new JLabel(r.getString("sysVersion") + ": {OS_VERSION}  "), new JLabel(r.getString("javaVersion") + ": {JAVA_VERSION}  ")
+            new JLabel(r.getString("lblOS") + ": {OS_NAME}  "), new JLabel(r.getString("lblSysVersion") + ": {OS_VERSION}  "), new JLabel(r.getString("lblJavaVersion") + ": {JAVA_VERSION}  ")
     };
     private JComboBox<String> interfaceBox;
     private JTextField ipBox = new JTextField(10);
     private JButton[] btns = {
-            new JButton(r.getString("refresh")), new JButton(r.getString("confirm")), new JButton(r.getString("clear")), new JButton(r.getString("about")), new JButton(r.getString("exit"))
+            new JButton(r.getString("btnRefresh")), new JButton(r.getString("btnConfirm")), new JButton(r.getString("btnClear")), new JButton(r.getString("btnAbout")), new JButton(r.getString("btnExit"))
     };
 
     public GuiMain(SystemInfo systemInfo, String[] adapters) {
@@ -56,7 +55,7 @@ public class GuiMain extends MISHelper {
     private void lblGenerate() {
         JPanel p = new JPanel();
         p.setLayout(new GridBagLayout());
-        for(int i = 0; i < lblSys.length; ++i) {
+        for (int i = 0; i < lblSys.length; ++i) {
             GridBagConstraints pg = new GridBagConstraints();
             pg.gridx = i;
             pg.fill = GridBagConstraints.HORIZONTAL;
@@ -71,7 +70,7 @@ public class GuiMain extends MISHelper {
         g.fill = GridBagConstraints.HORIZONTAL;
         frame.add(p, g);
 
-        for(int i = 0; i < labels.length; ++i) {
+        for (int i = 0; i < labels.length; ++i) {
             GridBagConstraints g2 = new GridBagConstraints();
             g2.gridx = 0;
             g2.gridy = i + 1;
@@ -92,7 +91,7 @@ public class GuiMain extends MISHelper {
     }
 
     private void fieldGenerate() {
-        for(int i = 0; i < 1; ++i) {
+        for (int i = 0; i < 1; ++i) {
             ipBox.setHorizontalAlignment(JTextField.CENTER);
 
             GridBagConstraints g = new GridBagConstraints();
@@ -113,7 +112,7 @@ public class GuiMain extends MISHelper {
         frame.add(btns[0], g);
 
         JPanel p = new JPanel();
-        for(int i = 1; i < btns.length; ++i) {
+        for (int i = 1; i < btns.length; ++i) {
             btns[i].addActionListener(mainListener);
             btns[i].setActionCommand(btns[i].getText());
 
@@ -127,40 +126,46 @@ public class GuiMain extends MISHelper {
         frame.add(p, g2);
     }
 
+    public static void message(String title, String message, int icon) {
+        if (!terminal)
+            JOptionPane.showMessageDialog(new JFrame(), message, title, icon);
+        System.out.println(title + " : " + message);
+        return;
+    }
 
     class MainListener implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            for(int i = 0; i < btns.length; ++i)
-                btns[i].setEnabled(false);
-
             String cmd = e.getActionCommand();
-            if(cmd.equals(btns[0].getText())) {
+            if (cmd.equals(btns[0].getText())) {
                 // Refresh
                 AdapterInfo.captureAdapters(systemInfo);
                 interfaceBox.removeAllItems();
-                for(int i = 0; i < AdapterInfo.getDisplayNameArray().length; ++i)
+                for (int i = 0; i < AdapterInfo.getDisplayNameArray().length; ++i)
                     interfaceBox.addItem(AdapterInfo.getDisplayNameArray()[i]);
-                //btns[1].setEnabled(true);
-            } else if(cmd.equals(btns[1].getText())) {
+            } else if (cmd.equals(btns[1].getText())) {
                 // Confirm
-                if(!checkIpFormat(ipBox.getText()))
+                if (!checkIpFormat(ipBox.getText())) {
                     ipBox.setText("");
-                processStaticIpUpdate(AdapterInfo.getAdapterName(interfaceBox.getSelectedItem().toString()), ipBox.getText());
-            } else if(cmd.equals(btns[2].getText())) {
+                    GuiMain.message(r.getString("msgTitIpFormatErr"), r.getString("msgIpFormatErr"), JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                if (processStaticIpUpdate(AdapterInfo.getAdapterName(interfaceBox.getSelectedItem().toString()), ipBox.getText()))
+                    GuiMain.message(r.getString("msgTitUpdateSuc"), r.getString("msgUpdateSuc"), JOptionPane.PLAIN_MESSAGE);
+                else
+                    GuiMain.message(r.getString("msgTitUpdateFail"), r.getString("msgUpdateFail"), JOptionPane.WARNING_MESSAGE);
+            } else if (cmd.equals(btns[2].getText())) {
                 // Clear
                 ipBox.setText("");
-            } else if(cmd.equals(btns[3].getText())) {
+            } else if (cmd.equals(btns[3].getText())) {
                 // About
                 new GuiAbout();
-            } else if(cmd.equals(btns[4].getText())) {
+            } else if (cmd.equals(btns[4].getText())) {
                 // Exit
                 System.exit(0);
             }
-
-            for(int i = 0; i < btns.length; ++i)
-                btns[i].setEnabled(true);
         }
     }
 

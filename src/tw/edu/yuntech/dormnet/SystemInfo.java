@@ -27,8 +27,16 @@ public class SystemInfo {
         javaVersion = System.getProperty("java.version");
     }
 
-    boolean isWindows() { return osName.toLowerCase().contains("win"); }
-    boolean isMac() { return osName.toLowerCase().contains("mac"); }
-    boolean isLinux() { return osName.toLowerCase().contains("nix") || osName.toLowerCase().contains("nux") || osName.toLowerCase().contains("aix"); }
+    boolean isWindows() {
+        return osName.toLowerCase().contains("win");
+    }
+
+    boolean isMac() {
+        return osName.toLowerCase().contains("mac");
+    }
+
+    boolean isLinux() {
+        return osName.toLowerCase().contains("nix") || osName.toLowerCase().contains("nux") || osName.toLowerCase().contains("aix");
+    }
 
 }
